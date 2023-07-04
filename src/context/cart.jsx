@@ -1,47 +1,29 @@
-import { createContext, useState } from "react";
+import { createContext, useReducer } from "react";
+import { cartIntialState, cartReducer } from "../reducers/cart";
 
 export const CartContext = createContext();
 
+function useCartReducer() {
+  const [state, dispatch] = useReducer(cartReducer, cartIntialState);
+
+  const addToCart = (product) =>
+    dispatch({ type: "ADD_TO_CART", payload: product });
+
+  const removeFromCart = (product) =>
+    dispatch({ type: "REMOVE_FROM_CART", payload: product });
+
+  const clearCart = () => dispatch({ type: "CLEAR_CART" });
+
+  return { state, addToCart, removeFromCart, clearCart };
+}
+
 export function CartProvider({ children }) {
-  const [cart, setCart] = useState([]);
-
-  const addToCart = (product) => {
-    // If the product is already in the cart, we update the quantity
-    const productIndex = cart.findIndex((item) => item.id === product.id);
-
-    if (productIndex >= 0) {
-      // Use structured cloning to create a new array
-      const newCart = structuredClone(cart);
-      newCart[productIndex].quantity += 1;
-      setCart(newCart);
-    } else {
-      // Use structured cloning to create a new array
-      setCart((prevCart) => [...prevCart, { ...product, quantity: 1 }]);
-    }
-  };
-
-  const removeFromCart = (product) => {
-    const productIndex = cart.findIndex((item) => item.id === product.id);
-
-    if (productIndex >= 0) {
-      // Use structured cloning to create a new array
-      const newCart = structuredClone(cart);
-      newCart[productIndex].quantity -= 1;
-      if (newCart[productIndex].quantity === 0) {
-        newCart.splice(productIndex, 1);
-      }
-      setCart(newCart);
-    }
-  };
-
-  const clearCart = () => {
-    setCart([]);
-  };
+  const { state, addToCart, removeFromCart, clearCart } = useCartReducer();
 
   return (
     <CartContext.Provider
       value={{
-        cart,
+        cart: state,
         addToCart,
         removeFromCart,
         clearCart,
